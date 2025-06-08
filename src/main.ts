@@ -1,3 +1,4 @@
+// src/main.ts
 
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
@@ -12,19 +13,19 @@ import {
   INestApplication,
 } from '@nestjs/common';
 
-// **** تعديل: استخدام * as للـ import لضمان التوافقية
-import * as dotenv from 'dotenv';
+// **** العودة إلى default import
+import dotenv from 'dotenv';
 dotenv.config();
 
-// **** تعديل: استخدام * as للـ import لضمان التوافقية
-import * as cookieParser from 'cookie-parser';
+// **** العودة إلى default import
+import cookieParser from 'cookie-parser';
 
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import helmet from 'helmet';
 import { ExpressAdapter } from '@nestjs/platform-express';
 
-// **** تعديل: استخدام * as للـ import لضمان التوافقية
-import * as express from 'express';
+// **** العودة إلى default import
+import express from 'express'; // <--- هنا التعديل الرئيسي
 
 const logger = new Logger('Bootstrap');
 
@@ -60,8 +61,9 @@ let cachedApp: INestApplication;
 
 async function bootstrap() {
   if (!cachedApp) {
-  
-    const expressApp = express(); 
+    // **** استخدام express() مباشرة
+    const expressApp = express(); // <--- هنا التعديل
+
     const app = await NestFactory.create(AppModule, new ExpressAdapter(expressApp));
 
     app.useGlobalPipes(new ValidationPipe({ whitelist: true }));
@@ -72,8 +74,8 @@ async function bootstrap() {
       methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
       allowedHeaders: ['Content-Type', 'Authorization', 'Accept'],
     });
-    // **** استخدام cookieParser.default() لضمان الحصول على الـ factory function
-    app.use(cookieParser()); // <--- جرب هذا التعديل
+    // **** استخدام cookieParser() مباشرة
+    app.use(cookieParser()); // <--- هنا التعديل
 
     const swagger = new DocumentBuilder()
       .setTitle('Nestjs-real-state-application')
@@ -95,17 +97,15 @@ async function bootstrap() {
 export default async function handler(req: any, res: any) {
   const app = await bootstrap();
   const instance = app.getHttpAdapter().getInstance();
-  // تأكيد تشغيل app.listen(0) لتهيئة الـ RequestListener قبل تسليمه لـ instance
   await app.listen(0); 
   return instance(req, res);
 }
 
-// هذا الجزء هو لتشغيل التطبيق محليًا (أو في بيئة development غير Vercel)
+// هذا الجزء هو لتشغيل التطبيق محليًا
 if (process.env.NODE_ENV !== 'production' && !process.env.VERCEL_ENV) {
   bootstrap().then(app => {
     const port = process.env.PORT || 3000;
     const expressApp = app.getHttpAdapter().getInstance();
-    // استخدام expressApp.listen() هنا لتشغيل السيرفر المحلي
     expressApp.listen(port, () => {
       logger.log(`Application is running on: http://localhost:${port}`);
     });
