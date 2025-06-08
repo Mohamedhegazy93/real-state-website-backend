@@ -7,7 +7,8 @@ import { User } from '../user/entities/user.entity';
 import { Neighborhood } from '../neighborhood/entities/neighborhood.entity';
 import { Media } from '../media/entities/media.entity';
 import { MulterModule } from '@nestjs/platform-express';
-import { diskStorage } from 'multer';
+// import { diskStorage } from 'multer'; // ❌ قم بإزالة هذا الاستيراد
+import { memoryStorage } from 'multer'; // ✅ استورد memoryStorage بدلاً منه
 import { PropertyMedia } from '../media/entities/propertyMedia.entity';
 import { CloudinaryModule } from '../cloudinary/cloudinary.module';
 import { CloudinaryService } from '../cloudinary/cloudinary.service';
@@ -15,17 +16,12 @@ import { AuthModule } from '../auth/auth.module';
 import { UserService } from '../user/user.service';
 
 @Module({
-  imports: [AuthModule,
-    TypeOrmModule.forFeature([Property, User, Neighborhood, Media,PropertyMedia]),CloudinaryModule,
+  imports: [
+    AuthModule,
+    TypeOrmModule.forFeature([Property, User, Neighborhood, Media, PropertyMedia]),
+    CloudinaryModule,
     MulterModule.register({
-      storage: diskStorage({
-        destination: './images',
-        filename: (req, file, cb) => {
-          const prefix = `${Date.now()}-${Math.round(Math.random() * 1000000)}`;
-          const filename = `${prefix}-${file.originalname}`;
-          cb(null, filename);
-        },
-      }),
+      storage: memoryStorage(), // ✅ استخدم memoryStorage() هنا بدلاً من diskStorage
       fileFilter: (req, file, cb) => {
         if (
           file.mimetype.startsWith('image') ||
@@ -42,6 +38,6 @@ import { UserService } from '../user/user.service';
     }),
   ],
   controllers: [PropertyController],
-  providers: [PropertyService,CloudinaryService,UserService],
+  providers: [PropertyService, CloudinaryService, UserService],
 })
 export class PropertyModule {}
